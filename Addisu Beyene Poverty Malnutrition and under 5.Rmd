@@ -35,7 +35,7 @@ wbc<-wbcc_bc
 View(wbc)
 ```
 
-Step 3: filter global health related data only and checking missing value
+Step 3: filter global health-related data only and check missing values
 
 
 ```{r wbc, echo=FALSE}
@@ -47,7 +47,7 @@ health_data<-global_data %>% select(SH.MED.CMHW.P3, SH.STA.MALN.ZS, SH.DYN.MORT,
 ```
 
 
-## Harmonisation of the varibles
+## Harmonisation of the variables
 
 ```{r health_data, echo=FALSE}
 
@@ -88,7 +88,7 @@ summary(health_clean[, c("poverty", "malnutrition", "u5_mort")])
 
 ```
 #Part 2
-## Relationships between  malnutrition , poverty, and under five mortality rate
+## Relationships between  malnutrition, poverty, and under-five mortality rate
 
 ### Correlations (to show relationships) 
 
@@ -98,13 +98,13 @@ cor(health_clean[, c("poverty", "malnutrition", "u5_mort")], use = "complete.obs
 ```
 #PART III
 
-# Visualize the data
+# Visualise the data
 
-# relationship between poverty and under five mortality
+# relationship between poverty and under-five mortality
 
 # Plot 1 - Poverty vs Under-5 Mortality
 
-```{r health_cleann, echo=FALSE}
+```{r health_clean, echo=FALSE}
 
 ggplot(health_clean, aes(x = poverty, y = u5_mort)) +
   geom_point(color = "steelblue", size = 3, alpha = 0.7) +
@@ -119,7 +119,8 @@ ggsave("plot_poverty_vs_u5mort.png")  # Save the plot as an image
 
 
 
-## relationship between malnutrition and under five mortality
+## Relationship between malnutrition and under-five mortality
+
 Plot 2 - Malnutrition vs Under-5 Mortality 
 
 ```{r health_clean, echo=FALSE}
@@ -150,7 +151,7 @@ ggsave("plot_all_three.png")
 
 
 
-# Plot with text labels for countries with very high mortality or poverty
+# Plot 4 -  with text labels for countries with very high mortality or poverty
 
 ```{r health_clean, echo=FALSE}
 high_burden <- health_clean %>%
