@@ -1,0 +1,208 @@
+---
+Title: "Extreme Poverty, Child Malnutrition and Under-5 Mortality Portfolio porjects"
+Author: "Addisu Beyene"
+Date: "2026-02-22"
+Output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+##PART 1
+
+## Step 1:  Load required packages
+
+```{r wbc}
+install.packages("tidyverse")
+library(tidyverse)
+install.packages("dplyr")
+library(dplyr)
+```
+# Step 2: Read the data
+
+```{r wbc}
+wbc<-wbcc_bc
+```
+
+```{r wbc}
+View(wbc)
+```
+
+Step 3: filter global health related data only and checking missing value
+
+
+```{r wbc, echo=FALSE}
+ 
+global_data<-wbc
+
+health_data<-global_data %>% select(SH.MED.CMHW.P3, SH.STA.MALN.ZS, SH.DYN.MORT, SI.POV.DDAY)
+
+```
+
+
+## Harmonisation of the varibles
+
+```{r health_data, echo=FALSE}
+
+health_data <- global_data %>%
+  select(
+    country = country,
+    poverty = SI.POV.DDAY,
+    malnutrition = SH.STA.MALN.ZS,
+    u5_mort = SH.DYN.MORT
+  )
+
+```
+
+# Remove rows with missing values
+
+```{r health_data, echo=FALSE}
+health_no_na <- health_data %>%
+  drop_na(poverty, malnutrition, u5_mort)
+
+```
+
+
+# Filter for non-negative values
+
+```{r health_clean, echo=FALSE}
+
+health_clean <- health_no_na %>%
+  filter(poverty >= 0, malnutrition >= 0, u5_mort >= 0)
+
+```
+
+ #Summary statistics
+ 
+```{r health_clean, echo=FALSE}
+
+
+summary(health_clean[, c("poverty", "malnutrition", "u5_mort")])
+
+```
+#Part 2
+## Relationships between  malnutrition , poverty, and under five mortality rate
+
+### Correlations (to show relationships) 
+
+
+```{r health_clean, echo=FALSE}
+cor(health_clean[, c("poverty", "malnutrition", "u5_mort")], use = "complete.obs")
+```
+#PART III
+
+# Visualize the data
+
+# relationship between poverty and under five mortality
+
+# Plot 1 - Poverty vs Under-5 Mortality
+
+```{r health_cleann, echo=FALSE}
+
+ggplot(health_clean, aes(x = poverty, y = u5_mort)) +
+  geom_point(color = "steelblue", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Extreme Poverty vs Under-5 Mortality",
+       x = "Poverty headcount at $2.15/day (%)",
+       y = "Under-5 mortality (per 1,000 live births)") +
+  theme_minimal()
+ggsave("plot_poverty_vs_u5mort.png")  # Save the plot as an image
+
+```
+
+
+
+## relationship between malnutrition and under five mortality
+Plot 2 - Malnutrition vs Under-5 Mortality 
+
+```{r health_clean, echo=FALSE}
+ggplot(health_clean, aes(x = malnutrition, y = u5_mort)) +
+  geom_point(color = "darkgreen", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "Child Malnutrition vs Under-5 Mortality",
+       x = "Prevalence of underweight children under 5 (%)",
+       y = "Under-5 mortality (per 1,000 live births)") +
+  theme_minimal()
+ggsave("plot_malnutrition_vs_u5mort.png")
+
+```
+# Plot 3 - All three: Poverty vs Malnutrition colored by U5 Mortality
+
+```{r health clean, echo=FALSE}
+
+ggplot(health_clean, aes(x = poverty, y = malnutrition)) +
+  geom_point(aes(color = u5_mort, size = u5_mort), alpha = 0.7) +
+  scale_color_gradient(low = "forestgreen", high = "firebrick") +
+  scale_size(range = c(2, 9)) +
+  labs(title = "Poverty vs Malnutrition (colored by U5 Mortality)",
+       x = "Poverty (%)", y = "Malnutrition (%)") +
+  theme_minimal()
+ggsave("plot_all_three.png")
+
+```
+
+
+
+# Plot with text labels for countries with very high mortality or poverty
+
+```{r health_clean, echo=FALSE}
+high_burden <- health_clean %>%
+  filter(u5_mort > 60 | poverty > 50 | malnutrition > 25)
+
+```
+
+```{r health_clean, echo=FALSE}
+
+ggplot(health_clean, aes(x = poverty, y = u5_mort)) +
+  geom_point(color = "steelblue", size = 2.8, alpha = 0.6) +
+  geom_smooth(method = "lm", color = "red", se = FALSE, linewidth = 1.2) +
+  geom_text(data = high_burden,
+            aes(label = country),
+            color = "black", size = 3.2, 
+            hjust = -0.1, vjust = -0.4, check_overlap = TRUE) +
+  labs(
+    title    = "Extreme Poverty vs Under-5 Mortality\n(with labels for high-burden countries)",
+    x        = "Poverty headcount at $2.15/day (%)",
+    y        = "Under-5 mortality (per 1,000 live births)"
+  ) +
+  theme_minimal(base_size = 14)
+ggsave("plot_Povery_under5_highBur.png")
+```
+
+#PART 4. Fit the linear regression model with poverty only
+
+```{r health_clean, echo=FALSE}
+Model_under <- lm(u5_mort ~ poverty, data = health_clean)
+summary(Model_under)
+
+```
+
+## Fit the Linear Regression Model with malnutrition & poverty
+
+```{r health_clean, echo=FALSE}
+lm_model_with_malnutrition <- lm(u5_mort ~ poverty + malnutrition , data = health_clean)
+summary(lm_model_with_malnutrition)
+
+```
+It can be seen that there is statistical significant linear relationship between poverty, malnutrition and under_five mortality with a p-value <0.001.
+
+
+```{r health_clean, echo=FALSE}
+coef(lm_model_with_malnutrition)
+confint(lm_model_with_malnutrition)
+confint(lm_model_with_malnutrition, level=0.90)
+confint(lm_model_with_malnutrition,parm = "poverty")
+
+```
+
+We can conclude that malnutrition and poverty strongly associated with under five mortality rate.
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
